@@ -1,6 +1,9 @@
-const express = require("express")
-require('dotenv').config()
-// import express from "express"
+import express from 'express';
+import { config as configDotenv } from 'dotenv';
+
+configDotenv();
+
+
 
 const githubData = {
     "login": "irfanhg07",
@@ -37,23 +40,37 @@ const githubData = {
     "updated_at": "2024-08-22T16:32:41Z"
   }
 
+
+  const jokes = [
+    { id: 1, title: "Why don’t skeletons fight each other?", content: "They don’t have the guts." },
+    { id: 2, title: "What do you call fake spaghetti?", content: "An impasta." },
+    { id: 3, title: "Why was the math book sad?", content: "It had too many problems." },
+    { id: 4, title: "Why don’t scientists trust atoms?", content: "Because they make up everything!" },
+    { id: 5, title: "What did one ocean say to the other ocean?", content: "Nothing, they just waved." }
+  ];
+  
+
 const app = express()
+// For frontend purpose Import static files
+app.use(express.static('frontend/dist'));
+const port = process.env.PORT || 5000
 
 // const port = 8080
 
-app.get("/", (req,res)=>{
-    res.send("Hellow welcome to the backend")
+// app.get("/", (req,res)=>{
+//     res.send("Hellow welcome to the backend")
 
-})
+// })
 
-app.get("/github", (req, res)=> {
-    res.json(githubData);
-})
+app.get("/api/jokes", (req, res) => {
+    res.json(jokes); // Sends the jokes array as JSON
+});
 
 app.get("/youtube", (req , res)=>{
     res.send("<h1>This is youtube link </h1>")
 })
 
-app.listen(process.env.PORT, ()=>{
-    console.log('App is listening on port ${port}')
+app.listen(port, ()=>{
+    console.log('App is listening on port ',port)
 })
+  
