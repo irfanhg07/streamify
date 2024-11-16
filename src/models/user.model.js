@@ -59,23 +59,26 @@ const userSchema = new Schema({
 
 // Pre hook before saving encrypt the password if it is created or modified
 userSchema.pre("save", async function (next) {
-    // Check if the password is modified or created
     if (!this.isModified("password")) return next();
 
     try {
-        // Hash the password with bcrypt
         this.password = await bcrypt.hash(this.password, 10);
         next();
     } catch (err) {
-        next(err);  // Pass error to next middleware
+        next(err);
     }
 });
 
-userSchema.methods.isPasswordCorrect = async function(password){
-    console.log(password, this.password);
-    
-    return await bcrypt.compare(password, this.password)
-}
+
+userSchema.methods.isPasswordCorrect = async function (password) {
+    console.log("This inside method:", this);
+    console.log("Plaintext password:", password);
+    console.log("Hashed password from DB:", this.password);
+
+    return await bcrypt.compareSync(password, this.password);
+};
+
+
 
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(

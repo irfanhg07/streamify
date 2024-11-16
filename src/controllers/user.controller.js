@@ -6,8 +6,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-
-
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
         const user = await User.findById(userId)
@@ -79,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImage = coverImageLocalPath ? await uploadOnCloudinary(coverImageLocalPath) : null;
     } catch (error) {
         throw new ApiError(500, "Error uploading images.");
-    }
+    }   
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -135,11 +133,11 @@ const loginUser = asyncHandler(async (req, res) =>{
         throw new ApiError(404, "User does not exist")
     }
 
-//    const isPasswordValid = await user.isPasswordCorrect(password)
+   const isPasswordValid = await user.isPasswordCorrect(password)
 
-//    if (!isPasswordValid) {
-//     throw new ApiError(401, "Invalid user credentials")
-//     }
+   if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials")
+    }
 
    const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
@@ -175,7 +173,7 @@ const logoutUser = asyncHandler( async(req, res)=>{
 
     const user = await User.findByIdAndUpdate(req.user._id,
     {
-        $set: {refreshToken: undefined}
+        $unset: {refreshToken: 1}
     },
 
     {
@@ -242,35 +240,33 @@ const refreshAccessToken = asyncHandler( async(req, res) =>{
 })
 
 
-const changePassword = asyncHandler( async(req, res) => {
-    
-    const {oldPassword, newPassword, confirmPassword} = req.body
+const changePassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
 
-
-    if(!(newPassword === confirmPassword)){
-        throw new ApiError(400, "New password did not match...")
+    if (newPassword !== confirmPassword) {
+        throw new ApiError(400, "New password did not match.");
     }
 
-    const user = await User.findById(req?.user._id)
-    console.log(user);
-    
-
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-
-    console.log(isPasswordCorrect);
-    
-
-    if(!isPasswordCorrect){
-        throw new ApiError(400, "Invalid Old password..")
+    const user = await User.findById(req?.user._id);
+    if (!user) {
+        throw new ApiError(404, "User not found.");
     }
 
-    user.password = newPassword
+    // Check if the old password is correct
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password.");
+    }
 
-    await user.save({validateBeforeSave: false})
+    // Set the new password and save
+    user.password = newPassword;
+    await user.save();
 
-    return res.status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully.. "))
-})
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Password changed successfully.")
+    );
+});
+
 
 
 const getCurrentUser = asyncHandler( async(req,res) => {
@@ -325,11 +321,11 @@ const updateUserAvatar = asyncHandler( async(req, res)=> {
         req.user?._id,
         {
             $set: {
-                avatar
+                avatar: avatar?.url
             }
         },
         {new: true}
-    )
+    ).select("-password")
 
     return res.status(200)
     .json(new ApiResponse(
@@ -357,7 +353,7 @@ const updateUserCoverImage = asyncHandler( async(req, res)=> {
         req.user?._id,
         {
             $set: {
-                coverImage
+                coverImage: coverImage?.url
             }
         },
         {new: true}
