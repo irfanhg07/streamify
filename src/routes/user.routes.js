@@ -4,7 +4,7 @@ import {
     logoutUser, 
     refreshAccessToken, 
     registerUser,
-    changePassword ,
+    changeCurrentPassword ,
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
@@ -38,7 +38,7 @@ router.route("/logout").post(verifyJWT, logoutUser)
 
 router.route("/refreshToken").post(verifyJWT, refreshAccessToken)
 
-router.route("/changePassword").post(verifyJWT, changePassword)
+router.route("/changePassword").post(verifyJWT, changeCurrentPassword)
 
 router.route("/getCurrentUser").post(verifyJWT, getCurrentUser)
 
